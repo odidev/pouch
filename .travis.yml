@@ -110,3 +110,4 @@ jobs:
       name: "Integration test 3"
       arch: arm64
       script: ./travis_ci.sh integrationtest 4 3
+ 

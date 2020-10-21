@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 sudo: required
 
 language: go
@@ -15,6 +15,18 @@ before_install:
       exit
     }
 
+install:
+  - if [ "${TRAVIS_CPU_ARCH}" == "arm64" ]; then
+    wget https://download.docker.com/linux/ubuntu/dists/bionic/pool/stable/arm64/docker-ce_18.06.0~ce~3-0~ubuntu_arm64.deb;
+    sudo apt-get purge -y docker.io;
+    sudo apt-get autoclean;
+    sudo dpkg -i docker-ce_18.06.0~ce~3-0~ubuntu_arm64.deb;
+    else
+    wget https://download.docker.com/linux/ubuntu/dists/bionic/pool/stable/amd64/docker-ce_18.06.0~ce~3-0~ubuntu_amd64.deb;
+    sudo apt-get purge -y docker.io;
+    sudo apt-get autoclean;
+    sudo dpkg -i docker-ce_18.06.0~ce~3-0~ubuntu_amd64.deb;
+    fi
 notifications:
   webhooks:
     urls:
@@ -26,25 +38,75 @@ jobs:
   include:
     - stage: test
       name: "Unit test"
+      dist: focal
+      arch: amd64
+      install: skip
+      name: "Unit test"
+      script: ./travis_ci.sh unittest
+    - stage: test
+      name: "Unit test"
+      dist: focal
+      virt: vm
+      group: edge
+      arch: arm64-graviton2
+      install: skip
       script: ./travis_ci.sh unittest
 
     - stage: test
       name: "CRIv1alpha2 test"
+      arch: amd64
+      script: ./travis_ci.sh criv1alpha2test
+    - stage: test
+      name: "CRIv1alpha2 test"
+      arch: arm64
       script: ./travis_ci.sh criv1alpha2test
 
     - stage: test
       name: "Node e2e test"
+      arch: amd64
       script: ./travis_ci.sh nodee2etest
+    - stage: test
+      name: "Node e2e test"
+      arch: arm64
+      script:
+        - sudo add-apt-repository "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ bionic main restricted universe multiverse"
+        - sudo add-apt-repository "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ bionic-updates main restricted universe multiverse"
+        - sudo add-apt-repository "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ bionic-backports main restricted universe multiverse"
+        - sudo add-apt-repository "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ bionic-security main restricted universe multiverse"
+        - sudo apt-get update
+        - sudo apt-get install linux-headers-`uname -r`
+        - sudo apt-get install --reinstall linux-image-`uname -r`
+        - ./travis_ci.sh nodee2etest
 
     - stage: test
       name: "Integration test 0"
+      arch: amd64
+      script: ./travis_ci.sh integrationtest 4 0
+    - stage: test
+      name: "Integration test 0"
+      arch: amd64
       script: ./travis_ci.sh integrationtest 4 0
     - stage: test
       name: "Integration test 1"
+      arch: amd64
+      script: ./travis_ci.sh integrationtest 4 1
+    - stage: test
+      name: "Integration test 1"
+      arch: arm64
       script: ./travis_ci.sh integrationtest 4 1
     - stage: test
       name: "Integration test 2"
+      arch: amd64
+      script: ./travis_ci.sh integrationtest 4 2
+    - stage: test
+      name: "Integration test 2"
+      arch: arm64
       script: ./travis_ci.sh integrationtest 4 2
     - stage: test
       name: "Integration test 3"
+      arch: amd64
+      script: ./travis_ci.sh integrationtest 4 3
+    - stage: test
+      name: "Integration test 3"
+      arch: arm64
       script: ./travis_ci.sh integrationtest 4 3
